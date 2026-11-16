@@ -4,6 +4,9 @@
 
 **[▶ 플레이하기](https://kim-sangbum.github.io/game-chess-maker/)** · **[📄 소개 페이지](https://kim-sangbum.github.io/game-chess-maker/docs/)**
 
+설치 없이 위 주소로 접속하면 컴퓨터 대전, 한 화면 2인 대전, **온라인 2인 대전**을 모두 할 수 있습니다.
+> 온라인 대전 서버는 무료 서버라 한동안 아무도 쓰지 않으면 잠듭니다. 그래서 **첫 연결은 최대 1분 정도** 걸릴 수 있고, 기다리는 동안 화면 아래에 경과 시간이 표시됩니다.
+
 ![홈 화면](docs/screenshots/01-main-menu.png)
 
 ## 개요
@@ -65,14 +68,17 @@
 - 게임 설정 화면에서 고릅니다. 설정 화면을 열 때마다 고전 전투가 선택되어 있고, 게임 중에는 바꿀 수 없습니다.
 - 온라인 대전에서는 각자 자기 화면의 모드를 고릅니다. 방장은 방을 만들 때, 참가자는 방 대기실에서 고릅니다.
 
-**온라인 대전 흐름**
+**온라인 대전 하는 법** (두 사람이 각자 [게임 주소](https://kim-sangbum.github.io/game-chess-maker/)에 접속)
 1. 홈 → **온라인 2인 대전** → 로비
-2. **방 만들기** → 전투 모드, 방 이름, 방장 기물 색, 규칙 선택
-3. 상대는 로비 목록에서 **참가**를 누르거나 **4자리 방 코드**를 입력
-4. 상대가 들어오면 방장이 **게임 시작**
-5. 대국 중에는 무승부 제안과 기권을 할 수 있습니다. 게임이 끝나면 방장이 **재대결**을 시작할 수 있습니다
+   - 서버가 잠들어 있으면 "온라인 서버를 깨우는 중입니다… (N초)" 안내가 나옵니다. 최대 1분 정도 기다리면 로비가 열립니다.
+   - 1분이 넘어도 연결되지 않으면 **다시 시도 / 홈으로**를 고를 수 있습니다.
+2. 한 사람이 **방 만들기** → 전투 모드, 방 이름, 방장 기물 색, 규칙 선택
+3. 대기실에 나온 **4자리 방 코드**를 상대에게 알려 줍니다 (복사 버튼 있음).
+4. 상대는 로비 목록에서 **참가**를 누르거나 방 코드를 입력합니다.
+5. 상대가 들어오면 방장이 **게임 시작**을 누릅니다.
+6. 대국 중에는 무승부 제안과 기권을 할 수 있습니다. 게임이 끝나면 방장이 **재대결**을 시작할 수 있습니다.
 
-모든 수와 시간은 서버에서 검증합니다. 대국 중에 나가거나 연결이 끊기면 그 사람의 패배로 처리됩니다.
+모든 수와 시간은 서버에서 검증합니다. 대국 중에 나가거나 연결이 끊기면 그 사람의 패배로 처리됩니다. 배포 서버에서는 이 처리가 10~20초쯤 늦게 반영될 수 있습니다.
 
 ### 조작
 
@@ -98,6 +104,8 @@
 | **고전 전투**: e4 폰을 선택해 잡을 수 있는 칸(d5)이 표시된 상태 | **공격 연출**: 흰 창병이 d5의 검은 창병에게 다가가 창으로 찌르기 직전 |
 | ![체크메이트 결과](docs/screenshots/05-result.png) | ![현대전 게임 화면](docs/screenshots/06-modern.png) |
 | **결과 화면**: 체크메이트(흑 승리) 팝업 | **현대전**: 초록군 vs 갈색군, 비숍(저격수)의 이동 가능한 칸 표시 |
+| ![온라인 대기실](docs/screenshots/07-online-room.png) | |
+| **온라인 대기실**: 방 코드, 방장과 참가자, 내 화면 전투 모드 선택, 게임 시작 버튼 | |
 
 ## 기술 스택
 
@@ -136,28 +144,35 @@ npm start
 
 ## 배포
 
-게임 화면은 **GitHub Pages**에, 온라인 대전 서버는 **Render**에 올리는 구성입니다.
-- AI 대전과 한 화면 대전은 Pages만으로 동작합니다.
-- 온라인 대전만 Render 서버에 WebSocket으로 연결합니다.
+게임 화면은 **GitHub Pages**에, 온라인 대전 서버는 **Render**에 올린 구성입니다. **사용자에게는 GitHub Pages 주소만 알려 주면 됩니다.**
+- 게임 화면과 AI 대전, 한 화면 대전은 Pages에서 바로 열립니다.
+- 온라인 대전을 누르면 Pages의 게임이 Render 서버에 WebSocket으로 연결합니다.
+- Render 주소로 직접 들어가도 게임 전체가 동작하지만, 서버가 잠들어 있으면 화면 자체가 늦게 열리므로 공개용 주소로는 쓰지 않습니다.
 
 | 구성 | 역할 | 주소 | 설정 파일 |
 |---|---|---|---|
-| GitHub Pages | 게임 정적 버전 | https://kim-sangbum.github.io/game-chess-maker/ | `.github/workflows/pages.yml`, `scripts/build-pages.mjs` |
+| GitHub Pages | **게임 (공개 주소)** | https://kim-sangbum.github.io/game-chess-maker/ | `.github/workflows/pages.yml`, `scripts/build-pages.mjs` |
 | GitHub Pages | 소개 페이지 | https://kim-sangbum.github.io/game-chess-maker/docs/ | (위와 같음) |
-| Render (무료) | 온라인 대전 서버 (`server.js`) | 아직 연결 안 됨 | `render.yaml` |
+| Render (무료, 싱가포르) | 온라인 대전 서버 (`server.js`) | https://game-chess-maker.onrender.com | `render.yaml` |
 
-현재 배포된 사이트에는 온라인 대전 서버가 연결되어 있지 않습니다. 그래서 온라인 2인 대전 메뉴를 누르면 안내 메시지가 나옵니다. 온라인 대전까지 하려면 내 컴퓨터에서 실행하거나 아래 2~3단계를 진행하세요.
+두 서비스는 GitHub 저장소 변수 `ONLINE_SERVER_URL`로 연결되어 있습니다. Pages 빌드가 이 값을 `config.js`에 넣습니다.
 
-**처음 한 번 설정**
-
-1. **GitHub Pages**: 저장소 Settings → Pages → Source를 **GitHub Actions**로 바꿉니다. 그 뒤로 `main`에 push할 때마다 자동으로 배포됩니다.
-2. **Render**: [render.com](https://render.com)에 GitHub으로 로그인합니다. New → **Blueprint** → 이 저장소를 고르면 `render.yaml` 설정으로 서버가 만들어집니다.
-3. **두 서비스 연결**: Render가 준 주소(예: `https://game-chess-maker.onrender.com`)를 GitHub 저장소 Settings → Secrets and variables → Actions → **Variables**에 `ONLINE_SERVER_URL`로 등록합니다. 그다음 Actions에서 Pages 배포를 다시 실행합니다.
-
-**참고**
-- Render 무료 서버는 15분 동안 접속이 없으면 잠듭니다. 잠든 상태에서 온라인 대전에 들어가면 게임이 서버를 먼저 깨우고(최대 1분) 연결합니다. 잠들면 진행 중이던 방은 사라집니다.
-- `ONLINE_SERVER_URL`을 등록하기 전에는 Pages 사이트의 온라인 대전 메뉴에서 "서버가 연결되어 있지 않다"는 안내가 나옵니다.
+**배포 방식**
+- `main`에 push하면 GitHub Pages와 Render가 **둘 다 자동으로** 다시 배포됩니다.
 - Pages 빌드를 로컬에서 확인하려면 `ONLINE_SERVER_URL=http://localhost:3100 npm run build:pages`를 실행합니다. 결과는 `_site/`에 생깁니다.
+
+**무료 서버(Render) 동작**
+- 15분 동안 접속이 없으면 잠듭니다. 잠들면 진행 중이던 방은 사라집니다.
+- 누군가 게임 사이트에 들어오면 게임이 화면 표시 없이 서버를 미리 깨우기 시작합니다. 그래서 온라인 대전을 누를 때쯤이면 대부분 바로 연결됩니다.
+- 그래도 아직 깨어나는 중이면 경과 시간 안내를 보여 주고, 75초가 넘으면 다시 시도 / 홈으로를 묻습니다.
+
+**처음부터 다시 설정할 때** (참고용, 현재는 설정 완료)
+1. **GitHub Pages**: 저장소 Settings → Pages → Source를 **GitHub Actions**로 설정합니다.
+2. **Render**: [render.com](https://render.com)에 GitHub으로 로그인 → New → **Web Service** → 이 저장소 선택.
+   - Region `Singapore`, Build `npm ci`, Start `npm start`, Instance `Free`
+   - Health Check Path `/health`, 환경 변수 `NODE_VERSION=22`
+   - 또는 New → **Blueprint**로 `render.yaml`을 그대로 쓸 수 있습니다 (이 경우 지역은 미국).
+3. **연결**: Render 주소를 저장소 Settings → Secrets and variables → Actions → **Variables**에 `ONLINE_SERVER_URL`로 등록하고, Actions에서 Pages 배포를 다시 실행합니다.
 
 ## 프로젝트 구조
 
@@ -190,7 +205,8 @@ game-chess-maker/
 - 3D 연출 시간도 시계에 포함됩니다. 연출 중에도 다음 수는 바로 둘 수 있습니다.
 - 3D 보드에서는 드래그가 시점 회전이라, 기물은 클릭으로 옮깁니다 (2D 보드는 드래그 이동 가능).
 - 홈 화면 3D 배경은 PC 화면에서만 나옵니다. 휴대폰, 좁은 화면, 모션 줄이기 설정, 3D 불가 기기에서는 정지 배경입니다.
-- 온라인 방과 대국 정보는 서버 메모리에만 있어서, 서버를 다시 시작하면 사라집니다.
+- 온라인 방과 대국 정보는 서버 메모리에만 있어서, 서버가 잠들거나 다시 시작하면 사라집니다.
+- 무료 온라인 서버는 잠들 수 있어서, 첫 연결에 최대 1분 정도 걸릴 수 있습니다.
 - AI(Web Worker), 3D, 글꼴은 서버를 통해 열어야 동작합니다 (`index.html`을 파일로 직접 열면 안 됩니다).
 
 ## 로드맵
@@ -199,4 +215,4 @@ game-chess-maker/
 
 ---
 
-*프로젝트 소스와 실제 실행 화면을 바탕으로 작성한 문서입니다. 마지막 갱신: 2026-11-16.*
+*프로젝트 소스와 실제 실행 화면을 바탕으로 작성한 문서입니다. 마지막 갱신: 2026-11-17.*
