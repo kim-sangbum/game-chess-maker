@@ -2,6 +2,8 @@
 
 > 장난감 병사들이 실제로 싸우는 3D 체스. 컴퓨터 대전, 온라인 방 대전, 한 화면 2인 대전을 지원하는 브라우저 게임입니다.
 
+**[▶ 플레이하기](https://kim-sangbum.github.io/game-chess-maker/)** · **[📄 소개 페이지](https://kim-sangbum.github.io/game-chess-maker/docs/)**
+
 ![홈 화면](docs/screenshots/01-main-menu.png)
 
 ## 개요
@@ -127,7 +129,7 @@ npm install
 npm start
 ```
 
-브라우저에서 **http://localhost:3100** 에 접속합니다.
+브라우저에서 **http://localhost:3100** 에 접속합니다. 소개 페이지는 http://localhost:3100/docs/ 입니다.
 같은 와이파이·네트워크의 친구는 서버 시작 시 터미널에 표시되는 `http://<이 컴퓨터의 내부 IP>:3100` 주소로 접속하면 됩니다. 접속이 안 되면 Windows 방화벽에서 Node.js를 허용해 주세요.
 
 포트를 바꾸려면 `PORT=8080 npm start`를 씁니다 (PowerShell: `$env:PORT=8080; npm start`).
@@ -138,10 +140,13 @@ npm start
 - AI 대전과 한 화면 대전은 Pages만으로 동작합니다.
 - 온라인 대전만 Render 서버에 WebSocket으로 연결합니다.
 
-| 구성 | 역할 | 설정 파일 |
-|---|---|---|
-| GitHub Pages | 게임 정적 버전 + 소개 페이지(`/docs/`) | `.github/workflows/pages.yml`, `scripts/build-pages.mjs` |
-| Render (무료) | 온라인 대전 서버 (`server.js`) | `render.yaml` |
+| 구성 | 역할 | 주소 | 설정 파일 |
+|---|---|---|---|
+| GitHub Pages | 게임 정적 버전 | https://kim-sangbum.github.io/game-chess-maker/ | `.github/workflows/pages.yml`, `scripts/build-pages.mjs` |
+| GitHub Pages | 소개 페이지 | https://kim-sangbum.github.io/game-chess-maker/docs/ | (위와 같음) |
+| Render (무료) | 온라인 대전 서버 (`server.js`) | 아직 연결 안 됨 | `render.yaml` |
+
+현재 배포된 사이트에는 온라인 대전 서버가 연결되어 있지 않습니다. 그래서 온라인 2인 대전 메뉴를 누르면 안내 메시지가 나옵니다. 온라인 대전까지 하려면 내 컴퓨터에서 실행하거나 아래 2~3단계를 진행하세요.
 
 **처음 한 번 설정**
 

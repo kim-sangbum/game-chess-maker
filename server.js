@@ -18,6 +18,7 @@ const VENDOR = [
   ['/vendor/three/', path.join(NM, 'three')],
   ['/vendor/fontsource/', path.join(NM, '@fontsource')],
   ['/vendor/pretendard/', path.join(NM, 'pretendard', 'dist', 'web')],
+  ['/docs/', path.join(__dirname, 'docs')],
 ];
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -45,8 +46,13 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
     return res.end(JSON.stringify({ ok: true, rooms: rooms.size }));
   }
-  if (pathname === '/') pathname = '/index.html';
-  // /vendor/... → node_modules의 라이브러리 (3D, 글꼴)
+  // 소개 페이지: /docs → /docs/ (페이지 안의 상대 경로가 맞도록)
+  if (pathname === '/docs') {
+    res.writeHead(301, { Location: '/docs/' });
+    return res.end();
+  }
+  if (pathname.endsWith('/')) pathname += 'index.html';
+  // /vendor/... → node_modules의 라이브러리 (3D, 글꼴), /docs/... → 소개 페이지
   let root = PUBLIC, rel = pathname;
   for (const [prefix, dir] of VENDOR) {
     if (pathname.startsWith(prefix)) {
