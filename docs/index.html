@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="장난감 병사들이 실제로 싸우는 3D 브라우저 체스. 컴퓨터 대전, 온라인 방 대전, 한 화면 2인 대전, 고전 전투와 현대전 모드.">
+  <title>체스 — 장난감 병사 전투 · 게임 소개</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 45 45%27%3E%3Crect width=%2745%27 height=%2745%27 rx=%279%27 fill=%27%23211a12%27/%3E%3Cpath d=%27M14 35c0-6.5 3.5-9.5 6.5-12.5-3 .8-5.8 1.6-8 .6-2.3-1-2.6-3.8-.8-6.1 2.2-2.9 5.2-5.3 7.3-8.5l1-3 2 3.3c6.2.3 11 5.5 11 13.7 0 5.5-1.8 9.2-2 12.5z%27 fill=%27%23d6b05c%27/%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #120e0a;
+      --panel: #211a12;
+      --panel-2: #2b2218;
+      --text: #f0e5cc;
+      --muted: #a8977a;
+      --accent: #d6b05c;
+      --accent-hi: #ecc977;
+      --line: rgba(205, 168, 92, .24);
+      --radius: 16px;
+      --max: 1160px;
+      --serif: "Nanum Myeongjo", "Noto Serif KR", Georgia, "Times New Roman", serif;
+      --sans: "Pretendard Variable", Pretendard, system-ui, -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; color: var(--text); font: 16px/1.7 var(--sans);
+      background:
+        radial-gradient(1100px 600px at 12% -5%, #2f2316 0, transparent 60%),
+        radial-gradient(900px 600px at 105% 40%, #241a10 0, transparent 55%),
+        var(--bg);
+    }
+    a { color: var(--accent); }
+    .wrap { width: min(var(--max), calc(100% - 40px)); margin: 0 auto; }
+    header { padding: 64px 0 30px; }
+    .eyebrow { color: var(--accent); font-size: .78rem; font-weight: 700; letter-spacing: .32em; text-transform: uppercase; }
+    h1 {
+      margin: 10px 0 6px; font-family: var(--serif); font-size: clamp(2.6rem, 7vw, 4.8rem); line-height: 1.05; letter-spacing: -.01em;
+      background: linear-gradient(to bottom, #fff6dd, var(--accent) 75%, #8a6a2c); -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .lead { max-width: 760px; color: var(--muted); font-size: 1.12rem; margin: 0; }
+    .chips { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
+    .chip { border: 1px solid var(--line); border-radius: 999px; padding: 6px 13px; color: var(--text); background: rgba(255,255,255,.03); font-size: .85rem; }
+    .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+    .cta a { display: inline-flex; align-items: center; padding: 12px 22px; border-radius: 11px; font-weight: 700; text-decoration: none; }
+    .cta .play { background: linear-gradient(to bottom, var(--accent-hi), var(--accent)); color: #20170a; box-shadow: 0 8px 24px rgba(214,176,92,.3); }
+    .cta .play:hover { filter: brightness(1.07); }
+    .cta .repo { border: 1px solid var(--line); color: var(--text); }
+    .cta .repo:hover { border-color: var(--accent); }
+    .hero { margin: 22px 0 50px; overflow: hidden; border: 1px solid var(--line); border-radius: 22px; background: var(--panel); box-shadow: 0 28px 80px rgba(0,0,0,.45); }
+    .hero img { display: block; width: 100%; height: auto; }
+    .hero figcaption, .shot figcaption { padding: 12px 16px; color: var(--muted); font-size: .9rem; }
+    .hero figcaption b, .shot figcaption b { color: var(--text); }
+    section { padding: 24px 0 34px; }
+    h2 { margin: 0 0 18px; font-family: var(--serif); font-size: clamp(1.5rem, 3vw, 2.1rem); display: flex; align-items: center; gap: 14px; }
+    h2::after { content: ""; flex: 1; height: 1px; background: linear-gradient(to right, var(--line), transparent); }
+    h3 { margin: 0 0 8px; font-size: 1.05rem; }
+    p { color: #ddd2b8; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .card { border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; background: linear-gradient(150deg, var(--panel-2), var(--panel)); }
+    .card h3 { color: var(--accent-hi); }
+    .card p, .card li { margin: 6px 0 0; color: var(--muted); font-size: .94rem; }
+    .card ul { margin: 6px 0 0; padding-left: 1.1em; }
+    .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .shot { margin: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); transition: transform .2s, border-color .2s; }
+    .shot:hover { transform: translateY(-2px); border-color: rgba(214,176,92,.55); }
+    .shot a { display: block; }
+    .shot img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: #070503; }
+    table { width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; }
+    th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--text); background: var(--panel-2); font-weight: 700; }
+    td { color: var(--muted); background: rgba(255,255,255,.02); }
+    td:first-child { color: var(--text); white-space: nowrap; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+    .tech { display: flex; flex-wrap: wrap; gap: 10px; }
+    code { font-family: ui-monospace, Consolas, monospace; background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 5px; color: var(--accent-hi); }
+    pre { background: #0b0805; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; overflow-x: auto; }
+    pre code { background: none; padding: 0; }
+    footer { margin-top: 40px; padding: 26px 0 44px; border-top: 1px solid var(--line); color: var(--muted); font-size: .88rem; }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+      .modes { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 620px) {
+      .grid, .gallery { grid-template-columns: 1fr; }
+      header { padding-top: 40px; }
+      .wrap { width: min(100% - 28px, var(--max)); }
+      th, td { padding: 9px 10px; font-size: .9rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="eyebrow">Game Showcase · 3D 보드게임</div>
+      <h1>체스 — 장난감 병사 전투</h1>
+      <p class="lead">장난감 병사들이 실제로 싸우는 3D 체스입니다. 정식 체스 규칙에 따라 컴퓨터, 온라인 친구, 같은 화면의 상대와 대전할 수 있고, 기물을 잡으면 병사가 직접 공격합니다.</p>
+      <div class="chips">
+        <span class="chip">웹 브라우저 + Node.js 서버</span>
+        <span class="chip">체스 · 3D</span>
+        <span class="chip">1인 (AI) · 2인 (온라인 / 한 화면)</span>
+        <span class="chip">고전 전투 · 현대전</span>
+      </div>
+      <div class="cta">
+        <a class="play" href="../">▶ 게임 하기</a>
+        <a class="repo" href="https://github.com/kim-sangbum/game-chess-maker">GitHub 저장소</a>
+      </div>
+    </header>
+
+    <figure class="hero">
+      <img src="screenshots/04-attack.png" alt="고전 전투 모드의 3D 체스판. 흰 창병이 d5의 검은 창병에게 다가가 창으로 찌르려는 순간" width="1440" height="900">
+      <figcaption><b>공격 연출</b> — 고전 전투 모드에서 흰 창병(폰)이 검은 창병을 잡으러 다가가는 장면. 실행 중인 게임에서 직접 캡처했습니다.</figcaption>
+    </figure>
+
+    <section id="overview">
+      <h2>게임 소개</h2>
+      <p>정식 체스 규칙을 구현한 브라우저 게임입니다. 기물은 3D 장난감 병사로 표현되며, 기물을 잡으면 기물마다 다른 공격 연출이 재생되고 잡힌 병사는 쓰러져 튕겨 나갑니다. 전투 모드는 흰색과 검은색의 중세 기사가 싸우는 <b>고전 전투</b>와, 초록군과 갈색군이 싸우는 <b>현대전</b> 두 가지입니다. 게임을 시작할 때 캐슬링·앙파상·무승부 규칙·제한 시간 같은 규칙을 직접 고를 수 있습니다.</p>
+    </section>
+
+    <section id="features">
+      <h2>주요 기능</h2>
+      <div class="grid">
+        <article class="card"><h3>세 가지 대전 방식</h3><p>난이도 4단계 AI와의 대전, 방을 만들어 참가하는 온라인 2인 대전, 한 기기에서 번갈아 두는 2인 대전.</p></article>
+        <article class="card"><h3>정식 체스 규칙</h3><p>캐슬링, 앙파상, 프로모션, 체크메이트·스테일메이트, 50수 규칙, 3회 동형 반복, 기물 부족 무승부.</p></article>
+        <article class="card"><h3>규칙 선택</h3><p>시작할 때 각 규칙을 켜고 끄고, 프로모션 방식과 제한 시간·수당 추가 시간을 정할 수 있습니다.</p></article>
+        <article class="card"><h3>3D 공격 연출</h3><p>창 찌르기, 랜스 돌격, 활, 투석기, 소총, 포격 등 기물마다 다른 공격. 게임이 끝나면 진 쪽 왕(장군)이 쓰러집니다.</p></article>
+        <article class="card"><h3>두 가지 전투 모드</h3><p>모드에 따라 병사 모델, 배경, 효과음과 화면 분위기(양피지·금색 / 군용 카키)가 함께 바뀝니다.</p></article>
+        <article class="card"><h3>온라인 방 대전</h3><p>4자리 방 코드로 참가하고 방장이 시작합니다. 모든 수와 시간은 서버가 검증하며, 무승부 제안·재대결을 지원합니다.</p></article>
+      </div>
+    </section>
+
+    <section id="modes">
+      <h2>전투 모드와 병사</h2>
+      <div class="modes">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th colspan="3">⚔ 고전 전투 (기본) — 흰색 vs 검은색</th></tr><tr><th>기물</th><th>병사</th><th>공격</th></tr></thead>
+            <tbody>
+              <tr><td>폰</td><td>창병</td><td>창 찌르기</td></tr>
+              <tr><td>나이트</td><td>기마 기사</td><td>랜스 돌격</td></tr>
+              <tr><td>비숍</td><td>궁수</td><td>활 쏘기</td></tr>
+              <tr><td>룩</td><td>이동식 성탑</td><td>탑 위 투석기 발사</td></tr>
+              <tr><td>퀸</td><td>여왕 기사</td><td>검 베기</td></tr>
+              <tr><td>킹</td><td>왕</td><td>검 내려치기</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th colspan="3">🪖 현대전 — 초록군 vs 갈색군</th></tr><tr><th>기물</th><th>병사</th><th>공격</th></tr></thead>
+            <tbody>
+              <tr><td>폰</td><td>소총병</td><td>소총 사격</td></tr>
+              <tr><td>나이트</td><td>기병</td><td>말 타고 돌격, 칼 베기</td></tr>
+              <tr><td>비숍</td><td>저격수</td><td>조준 후 저격</td></tr>
+              <tr><td>룩</td><td>탱크</td><td>포격 + 폭발</td></tr>
+              <tr><td>퀸</td><td>장교</td><td>권총 2연발</td></tr>
+              <tr><td>킹</td><td>장군</td><td>지휘봉 공격</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="screenshots">
+      <h2>게임 화면</h2>
+      <div class="gallery">
+        <figure class="shot">
+          <a href="screenshots/01-main-menu.png"><img src="screenshots/01-main-menu.png" alt="홈 화면. 뒤에서 고전 전투 3D 체스판이 보이고 그 위에 닉네임 입력과 대전 방식 메뉴 세 개가 있다" loading="lazy" width="1440" height="900"></a>
+          <figcaption><b>홈 화면</b> — 고전 전투 3D 체스판이 뒤에서 천천히 회전하고, 그 위에 대전 방식 메뉴가 떠 있습니다.</figcaption>
+        </figure>
+        <figure class="shot">
+          <a href="screenshots/02-setup.png"><img src="screenshots/02-setup.png" alt="게임 설정 화면. 고전 전투와 현대전 카드, 무르기 허용, 캐슬링·앙파상·프로모션·무승부 규칙·제한 시간 설정" loading="lazy" width="1440" height="900"></a>
+          <figcaption><b>게임 설정</b> — 전투 모드 카드와 규칙 선택. 카드를 고르면 화면 분위기가 바로 바뀌어 미리보기가 됩니다.</figcaption>
+        </figure>
+        <figure class="shot">
+          <a href="screenshots/03-gameplay-classic.png"><img src="screenshots/03-gameplay-classic.png" alt="고전 전투 게임 화면. e4의 흰 폰이 선택되어 초록색으로 표시되고 d5의 검은 폰에 빨간 고리가 표시되어 있다. 오른쪽에 기보와 버튼" loading="lazy" width="1440" height="900"></a>
+          <figcaption><b>고전 전투</b> — e4 폰을 선택하면 이동 가능한 칸은 점, 잡을 수 있는 칸(d5)은 빨간 고리로 표시됩니다.</figcaption>
+        </figure>
+        <figure class="shot">
+          <a href="screenshots/04-attack.png"><img src="screenshots/04-attack.png" alt="공격 연출 중인 화면. 흰 창병이 d5의 검은 창병 바로 앞까지 다가가 있다" loading="lazy" width="1440" height="900"></a>
+          <figcaption><b>공격 연출</b> — 흰 창병이 검은 창병에게 다가가 창으로 찌르기 직전. 기보에 exd5가 기록되어 있습니다.</figcaption>
+        </figure>
+        <figure class="shot">
+          <a href="screenshots/05-result.png"><img src="screenshots/05-result.png" alt="체크메이트 결과 팝업. 체크메이트, 흑 승리, 다시 하기·보드 보기·메뉴로 버튼" loading="lazy" width="1440" height="900"></a>
+          <figcaption><b>결과 화면</b> — 체크메이트(흑 승리) 팝업. 다시 하기, 보드 보기, 메뉴로 이동할 수 있습니다.</figcaption>
+        </figure>
+        <figure class="shot">
+          <a href="screenshots/06-modern.png"><img src="screenshots/06-modern.png" alt="현대전 게임 화면. 나무 책상 위 체스판에 초록군과 갈색군 장난감 병사, 탱크가 있고 f1 비숍의 이동 가능한 칸이 점으로 표시되어 있다" loading="lazy" width="1440" height="900"></a>
+          <figcaption><b>현대전</b> — 초록군 vs 갈색군. 화면 분위기도 군용 카키 테마로 바뀝니다.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="how-to-play">
+      <h2>게임 방법</h2>
+      <p>일반 체스와 같이 상대 킹을 체크메이트하면 이깁니다. 기권하거나 제한 시간을 모두 쓰면 집니다. 시간을 다 썼을 때 상대에게 메이트할 기물이 없으면 무승부입니다. 스테일메이트, 그리고 켜 둔 무승부 규칙(50수·3회 반복·기물 부족)에 걸리면 무승부입니다. 온라인 대전에서는 무승부를 제안할 수 있고, 대국 중에 나가면 패배로 처리됩니다.</p>
+      <h3>조작</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>입력</th><th>동작</th></tr></thead>
+          <tbody>
+            <tr><td>기물 클릭 → 칸 클릭</td><td>기물 선택과 이동 (3D·2D 공통)</td></tr>
+            <tr><td>기물 드래그</td><td>2D 보드에서 끌어서 이동</td></tr>
+            <tr><td>마우스 드래그 (3D)</td><td>시점 회전</td></tr>
+            <tr><td>마우스 휠 (3D)</td><td>확대 / 축소</td></tr>
+            <tr><td><code>Esc</code></td><td>선택 해제, 결과 팝업 닫기</td></tr>
+            <tr><td>보드 오른쪽 위 아이콘</td><td>2D/3D 전환, 연출 속도, 시점 초기화, 보드 뒤집기, 소리</td></tr>
+            <tr><td>오른쪽 패널 버튼</td><td>무르기, 기권, 새 게임, 메뉴 / 온라인: 무승부 제안, 재대결, 대기실, 나가기</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="run">
+      <h2>실행 방법</h2>
+      <pre><code>npm install
+npm start</code></pre>
+      <p>브라우저에서 <code>http://localhost:3100</code> 에 접속합니다. 같은 네트워크의 친구는 서버가 터미널에 표시하는 내부 IP 주소로 접속할 수 있습니다.</p>
+    </section>
+
+    <section id="technology">
+      <h2>기술</h2>
+      <div class="tech">
+        <span class="chip">JavaScript</span>
+        <span class="chip">Node.js 서버</span>
+        <span class="chip">ws (WebSocket)</span>
+        <span class="chip">Three.js 0.170</span>
+        <span class="chip">Web Worker AI (알파-베타 탐색)</span>
+        <span class="chip">Web Audio 합성 효과음</span>
+        <span class="chip">SVG 2D 기물</span>
+      </div>
+    </section>
+
+    <footer>
+      <div>체스 — 장난감 병사 전투 · game-chess-maker 1.0.0</div>
+      <div>프로젝트 소스와 실제 실행 화면을 바탕으로 작성 · 2026-11-16</div>
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "project": "Example Game",
+  "screenshots": [
+    {
+      "file": "01-main-menu.png",
+      "title": "Main Menu",
+      "description": "Initial game screen"
+    },
+    {
+      "file": "03-gameplay.png",
+      "title": "Gameplay",
+      "description": "Representative active gameplay"
+    }
+  ],
+  "note": "Example only. Replace with real captures from the target game."
+}
