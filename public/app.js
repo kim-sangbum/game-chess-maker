@@ -142,18 +142,27 @@ function show(name) {
 }
 
 let toastTimer = 0;
+/** 아래쪽 안내. ms = 0 이면 hideToast() 할 때까지 계속 표시 */
 function toast(msg, ms = 2600) {
   const el = $('#toast');
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), ms);
+  if (ms > 0) toastTimer = setTimeout(() => el.classList.remove('show'), ms);
 }
 
-function confirmBox(text) {
+function hideToast() {
+  clearTimeout(toastTimer);
+  $('#toast').classList.remove('show');
+}
+
+function confirmBox(text, opts = {}) {
   return new Promise((resolve) => {
     const m = $('#confirm-modal');
     $('#confirm-text').textContent = text;
+    $('#confirm-yes').textContent = opts.yes || '확인';
+    $('#confirm-yes').className = 'btn ' + (opts.yesClass || 'danger');
+    $('#confirm-no').textContent = opts.no || '취소';
     m.hidden = false;
     const done = (v) => { m.hidden = true; $('#confirm-yes').onclick = $('#confirm-no').onclick = null; resolve(v); };
     $('#confirm-yes').onclick = () => done(true);
@@ -301,11 +310,7 @@ async function submitSetup() {
   store.set('chess.setup.' + mode, toSave);
   store.set('chess.rules', rules);
   if (mode === 'online') {
-    try {
-      await connect();
-    } catch {
-      return;
-    }
+    if (!(await ensureOnline())) return;
     S.theme = modeVals.theme;
     S.themeRoom = null;
     wsSend({ type: 'createRoom', name: modeVals.roomName, hostColor: modeVals.hostColor, rules });
@@ -1015,22 +1020,67 @@ function onlineServerUrl() {
   return location.origin;
 }
 
-/** 무료 서버(Render)는 오래 쉬면 잠듦 → /health로 깨운 뒤 연결 */
+const WAKE_LIMIT_MS = 75000; // 이 시간 안에 서버가 깨어나지 않으면 "연결할 수 없음" 안내
+
+/** 서버 상태 확인 한 번 (잠든 서버는 응답이 늦으므로 요청마다 제한 시간) */
+async function pingHealth(base, timeoutMs = 20000) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), timeoutMs);
+  try {
+    const r = await fetch(base + '/health', { cache: 'no-store', signal: ctl.signal });
+    return r.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+/**
+ * 무료 서버(Render)는 오래 쉬면 잠듦 → /health로 깨운 뒤 연결.
+ * 깨우는 동안 아래쪽 안내를 경과 시간과 함께 계속 보여 줍니다.
+ */
 async function wakeServer(base) {
   if (base === location.origin) return;
-  const notice = setTimeout(() => toast('온라인 서버를 깨우는 중입니다… 최대 1분 정도 걸릴 수 있어요.', 8000), 1200);
+  const t0 = Date.now();
+  let ticker = 0, shown = false;
+  const tick = () => {
+    shown = true;
+    const sec = Math.floor((Date.now() - t0) / 1000);
+    toast(`온라인 서버를 깨우는 중입니다… (${sec}초) · 무료 서버라 첫 연결은 최대 1분 정도 걸려요`, 0);
+  };
+  // 이미 깨어 있으면 바로 연결되므로, 잠깐 기다렸다가 안내 시작
+  const start = setTimeout(() => { tick(); ticker = setInterval(tick, 1000); }, 1200);
   try {
-    const t0 = Date.now();
-    while (Date.now() - t0 < 90000) {
-      try {
-        const r = await fetch(base + '/health', { cache: 'no-store' });
-        if (r.ok) return;
-      } catch { /* 아직 깨어나는 중 */ }
-      await new Promise((r) => setTimeout(r, 3000));
+    while (Date.now() - t0 < WAKE_LIMIT_MS) {
+      if (await pingHealth(base, Math.max(1000, WAKE_LIMIT_MS - (Date.now() - t0)))) return;
+      await new Promise((r) => setTimeout(r, 2500));
     }
-    throw new Error('server wake timeout');
+    const err = new Error('server wake timeout');
+    err.wakeFailed = true;
+    throw err;
   } finally {
-    clearTimeout(notice);
+    clearTimeout(start);
+    clearInterval(ticker);
+    if (shown) hideToast();
+  }
+}
+
+/** 온라인 연결. 서버가 끝내 깨어나지 않으면 "다시 시도 / 홈으로"를 묻습니다. */
+async function ensureOnline() {
+  for (;;) {
+    try {
+      await connect();
+      return true;
+    } catch (e) {
+      if (!e || !e.wakeFailed) return false;
+      const retry = await confirmBox('온라인 서버에 연결할 수 없습니다. 서버가 깨어나는 데 시간이 더 걸리고 있어요. 다시 시도할까요?',
+        { yes: '다시 시도', no: '홈으로', yesClass: 'primary' });
+      if (!retry) {
+        if (S.screen !== 'home') show('home');
+        return false;
+      }
+    }
   }
 }
 
@@ -1044,10 +1094,7 @@ function connect() {
       : '이 사이트에는 아직 온라인 대전 서버가 연결되어 있지 않습니다.');
     return Promise.reject(new Error('no online server'));
   }
-  S.wsPromise = wakeServer(base).catch((e) => {
-    toast('온라인 서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.');
-    throw e;
-  }).then(() => new Promise((resolve, reject) => {
+  S.wsPromise = wakeServer(base).then(() => new Promise((resolve, reject) => {
     const ws = new WebSocket(base.replace(/^http/, 'ws'));
     S.ws = ws;
     let opened = false;
@@ -1203,11 +1250,7 @@ function renderLobby() {
 }
 
 async function openLobby() {
-  try {
-    await connect();
-  } catch {
-    return;
-  }
+  if (!(await ensureOnline())) return;
   show('lobby');
   renderLobby();
   wsSend({ type: 'listRooms' });
@@ -1216,11 +1259,7 @@ async function openLobby() {
 async function joinRoom(id) {
   id = String(id || '').trim().toUpperCase();
   if (!/^[A-Z0-9]{4}$/.test(id)) return toast('4자리 방 코드를 입력하세요.');
-  try {
-    await connect();
-  } catch {
-    return;
-  }
+  if (!(await ensureOnline())) return;
   wsSend({ type: 'joinRoom', id });
 }
 
@@ -1361,6 +1400,10 @@ function init() {
   setupBoardInput();
   setInterval(tickClocks, 100);
   show('home');
+
+  // 온라인 서버가 다른 곳(Render)에 있으면 접속하자마자 미리 깨워 둠 (화면 표시 없음)
+  const online = onlineServerUrl();
+  if (online && online !== location.origin) pingHealth(online, 70000);
 }
 
 init();

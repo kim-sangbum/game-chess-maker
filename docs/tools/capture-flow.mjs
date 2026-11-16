@@ -10,6 +10,7 @@
  *   node docs/tools/capture-flow.mjs [URL] [출력 폴더]
  *   기본값: http://localhost:3100  docs/screenshots
  *   브라우저 경로는 CHROME_PATH 환경 변수로 지정할 수 있습니다.
+ *   CAPTURE_ONLY=online 이면 온라인 대기실(07-online-room.png)만 찍습니다.
  */
 import { spawn } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, existsSync, rmSync } from 'node:fs';
@@ -18,6 +19,7 @@ import path from 'node:path';
 
 const URL_ = process.argv[2] || 'http://localhost:3100';
 const OUT = process.argv[3] || 'docs/screenshots';
+const ONLY_ONLINE = process.env.CAPTURE_ONLY === 'online'; // 온라인 대기실(07)만 다시 찍기
 const W = 1440, H = 900, PORT = 9333;
 const CANDIDATES = [
   process.env.CHROME_PATH,
@@ -108,9 +110,10 @@ try {
   await waitFor('document.readyState === "complete" && !!window.Board3D');
   await waitFor('document.fonts.status === "loaded"');
 
-  // 1) 홈 화면 (3D 회전 배경)
   await click('#nickname');
   await send('Input.insertText', { text: '플레이어' });
+  if (!ONLY_ONLINE) {
+  // 1) 홈 화면 (3D 회전 배경)
   await waitFor('document.body.classList.contains("has-home-3d")');
   await sleep(2500);
   await shot('01-main-menu.png', '홈 화면');
@@ -167,6 +170,31 @@ try {
   await clickSquare('f1');
   await sleep(500);
   await shot('06-modern.png', '현대전 — 초록군 vs 갈색군');
+  await click('[data-act="menu"]');
+  await sleep(300);
+  if (await js('!document.querySelector("#confirm-modal").hidden')) await click('#confirm-yes');
+  await waitFor('!document.querySelector("#screen-home").hidden');
+  }
+
+  // 7) 온라인 대전 대기실 (방장 = 이 브라우저, 참가자 = 두 번째 연결)
+  await click('[data-go="online"]');
+  await waitFor('!document.querySelector("#screen-lobby").hidden', 90000);
+  await click('#lobby-create');
+  await waitFor('!document.querySelector("#screen-setup").hidden');
+  await sleep(400);
+  await click('#setup-go');
+  await waitFor('!document.querySelector("#screen-room").hidden && /^[A-Z0-9]{4}$/.test(document.querySelector(".room-code b")?.textContent || "")');
+  const code = await js('document.querySelector(".room-code b").textContent');
+  const guest = new WebSocket(URL_.replace(/^http/, 'ws'));
+  await new Promise((res, rej) => { guest.onopen = res; guest.onerror = rej; });
+  guest.send(JSON.stringify({ type: 'hello', name: '친구' }));
+  guest.send(JSON.stringify({ type: 'joinRoom', id: code }));
+  await waitFor('document.querySelectorAll("#room-card .slot.empty-slot").length === 0');
+  await sleep(800);
+  await shot('07-online-room.png', `온라인 대기실 — 방 코드 ${code}, 두 참가자`);
+  guest.close();
+  await click('[data-act="leave"]');
+  await sleep(500);
   log('완료');
 } catch (e) {
   console.error('캡처 실패:', e.message);

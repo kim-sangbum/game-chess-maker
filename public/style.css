@@ -420,6 +420,8 @@ body[data-ui="modern"] .view-tools { border-radius: 4px; }
 .pb-name .tag { font-weight: 500; font-size: .76rem; color: var(--muted); margin-left: 6px; }
 .pb-caps { display: flex; align-items: center; min-height: 18px; }
 .pb-caps .pc { width: 17px; height: 17px; margin-right: -5px; }
+/* 잡은 검은 기물: 어두운 배경에서도 보이도록 밝은 테두리 */
+.pb-caps .pc-b { stroke: #d9cdb2; stroke-width: 2.2; }
 .pb-diff { color: var(--muted); font-size: .78rem; margin-left: 9px; font-weight: 600; }
 .clock {
   font-family: var(--font-mono); font-size: 1.3rem; font-weight: 700; letter-spacing: .02em;
@@ -474,7 +476,9 @@ body[data-ui="modern"] .side { border-radius: 0; clip-path: var(--panel-shape); 
 .act:hover:not(:disabled) { border-color: var(--line-strong); color: var(--accent); }
 .act.primary { background: linear-gradient(to bottom, var(--accent-hi), var(--accent)); color: var(--accent-ink); border-color: transparent; }
 .act.primary:hover:not(:disabled) { color: var(--accent-ink); filter: brightness(1.07); }
-.act.danger:hover:not(:disabled) { color: #ff9a85; border-color: rgba(255,120,100,.5); }
+/* 기권 등 위험 동작: 평소에는 다른 버튼과 같고, 마우스를 올렸을 때만 빨갛게 (button.danger의 빨간 배경 덮어쓰기) */
+.act.danger { background: rgba(0,0,0,.2); color: var(--text); border-color: var(--line); }
+.act.danger:hover:not(:disabled) { color: #ff9a85; border-color: rgba(255,120,100,.5); background: rgba(185,83,58,.14); }
 body[data-ui="modern"] .act { border-radius: 3px; }
 
 /* ---------- 모달 ---------- */
